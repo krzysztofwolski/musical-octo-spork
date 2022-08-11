@@ -1,10 +1,10 @@
 import { Handlers } from "$fresh/server.ts";
-import { graphql } from "@/utils/shopify.ts";
+import { graphqlClient } from "@/utils/graphql.ts";
 
 export const handler: Handlers = {
   async POST(req) {
     const { query, variables } = await req.json();
-    const data = await graphql(query, variables);
+    const data = await graphqlClient(query, variables);
     return Response.json(data);
   },
 };

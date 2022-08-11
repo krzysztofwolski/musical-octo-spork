@@ -4,7 +4,7 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { tw } from "@twind";
 import { aspectRatio } from "@twind/aspect-ratio";
 import { formatCurrency } from "@/utils/data.ts";
-import { graphql } from "@/utils/shopify.ts";
+import { graphqlClient } from "@/utils/graphql.ts";
 import { Footer } from "@/components/Footer.tsx";
 import { HeadElement } from "@/components/HeadElement.tsx";
 import { Header } from "@/components/Header.tsx";
@@ -12,51 +12,55 @@ import IconCart from "@/components/IconCart.tsx";
 import { List, Product } from "../utils/types.ts";
 
 const q = `{
-  products(first: 10) {
-    nodes {
-      id
-      handle
-      title
-      featuredImage {
-        url
-        width
-        height
-        altText
-      }
-      priceRange {
-        minVariantPrice {
-          amount
-          currencyCode
+  products(first: 25, channel: "default-channel", filter:{categories:["Q2F0ZWdvcnk6OQ=="]}) {
+    edges {
+      node {
+        id
+        name
+        slug
+        description
+        media{
+          url
+          alt
         }
-        maxVariantPrice {
-          amount
-          currencyCode
+        thumbnail{
+          url
+          alt
+        }
+        pricing{
+          priceRange{
+            start{
+              gross{
+                currency
+                amount
+              }
+            }
+          }
         }
       }
     }
   }
 }`;
-
 interface Data {
-  products: List<Product>;
+  products: List<{ node: Product }>;
 }
 
 export const handler: Handlers<Data> = {
   async GET(_req, ctx) {
-    const data = await graphql<Data>(q);
+    const data = await graphqlClient<Data>(q);
     return ctx.render(data);
   },
 };
 
 export default function Home(ctx: PageProps<Data>) {
   const { data, url } = ctx;
-  const products = data.products.nodes;
+  const edges = data.products.edges;
   return (
     <div>
       <HeadElement
-        description="Shop for Deno Merch"
+        description="Demo for Saleor Merch, powered by Deno"
         image={url.href + "og-image.png"}
-        title="Deno Merch"
+        title="Saleor + Deno merch demo"
         url={url}
       />
       <Header />
@@ -68,9 +72,10 @@ export default function Home(ctx: PageProps<Data>) {
           Product List
         </h2>
         <div
-          class={tw`grid grid-cols-1 gap-8 sm:!gap-x-10 sm:!grid-cols-2 lg:!grid-cols-3 lg:!gap-x-12 lg:!gap-y-10`}
+          class={tw
+            `grid grid-cols-1 gap-8 sm:!gap-x-10 sm:!grid-cols-2 lg:!grid-cols-3 lg:!gap-x-12 lg:!gap-y-10`}
         >
-          {products.map((product) => <ProductCard product={product} />)}
+          {edges.map((edge) => <ProductCard product={edge.node} />)}
         </div>
       </div>
       <Footer />
@@ -80,37 +85,43 @@ export default function Home(ctx: PageProps<Data>) {
 
 function ProductCard(props: { product: Product }) {
   const { product } = props;
+
+  const thumbnail = product.media[0] || product.thumbnail;
+
   return (
-    <a key={product.id} href={`/products/${product.handle}`} class={tw`group`}>
+    <a key={product.id} href={`/products/${product.slug}`} class={tw`group`}>
       <div
         class={tw`${
           aspectRatio(1, 1)
         } w-full bg-white rounded-xl overflow-hidden border-2 border-gray-200 transition-all duration-500 relative`}
       >
-        {product.featuredImage && (
+        {thumbnail && (
           <img
-            src={product.featuredImage.url}
-            alt={product.featuredImage.altText}
-            width={product.featuredImage.width}
-            height={product.featuredImage.height}
-            class={tw`w-full h-full object-center object-contain absolute block`}
+            src={thumbnail.url}
+            alt={thumbnail.alt}
+            width={500}
+            height={500}
+            class={tw
+              `w-full h-full object-center object-contain absolute block`}
           />
         )}
         <div
-          class={tw`w-full h-full flex items-center justify-center bg-[rgba(255,255,255,0.6)] opacity-0 group-hover:opacity-100 transition-all duration-500`}
+          class={tw
+            `w-full h-full flex items-center justify-center bg-[rgba(255,255,255,0.6)] opacity-0 group-hover:opacity-100 transition-all duration-500`}
         >
           <IconCart size={30} />
         </div>
       </div>
       <div class={tw`flex items-center justify-between mt-3`}>
         <h3 class={tw`text-lg text-gray-800 font-medium relative`}>
-          {product.title}
+          {product.name}
           <span
-            class={tw`bg-gray-800 h-[3px] w-0 group-hover:!w-full absolute bottom-[-2px] left-0 transition-all duration-400`}
+            class={tw
+              `bg-gray-800 h-[3px] w-0 group-hover:!w-full absolute bottom-[-2px] left-0 transition-all duration-400`}
           />
         </h3>
         <strong class={tw`text-lg font-bold text-gray-800`}>
-          {formatCurrency(product.priceRange.minVariantPrice)}
+          {formatCurrency(product.pricing.priceRange.start.gross)}
         </strong>
       </div>
     </a>

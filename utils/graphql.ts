@@ -1,21 +1,19 @@
-const SHOPIFY_SHOP = Deno.env.get("SHOPIFY_SHOP");
-const SHOPIFY_ACCESS_TOKEN = Deno.env.get("SHOPIFY_ACCESS_TOKEN");
+const SALEOR_API = Deno.env.get("SALEOR_API") as string;
 
-if (SHOPIFY_SHOP === undefined || SHOPIFY_ACCESS_TOKEN === undefined) {
+if (!SALEOR_API) {
   throw new Error(
-    "env `SHOPIFY_SHOP` and `SHOPIFY_ACCESS_TOKEN` must be set",
+    "env `SALEOR_API` must be set",
   );
 }
 
-export async function graphql<T>(
+export async function graphqlClient<T>(
   query: string,
   variables: Record<string, unknown> = {},
 ): Promise<T> {
-  const resp = await fetch(`https://${SHOPIFY_SHOP}/api/2022-04/graphql.json`, {
+  const resp = await fetch(SALEOR_API, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": SHOPIFY_ACCESS_TOKEN!,
     },
     body: JSON.stringify({ query, variables }),
   });

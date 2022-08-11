@@ -15,7 +15,7 @@ export default function AddToCart(props: AddToCartProps) {
   const add = (e: MouseEvent) => {
     e.preventDefault();
     setIsAdding(true);
-    addToCart(data!.id, props.id).finally(() => {
+    addToCart(data!.token, props.id).finally(() => {
       setIsAdding(false);
     });
   };

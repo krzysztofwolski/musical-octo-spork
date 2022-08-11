@@ -1,40 +1,44 @@
 export interface Money {
   amount: number;
-  currencyCode: string;
+  currency: string;
 }
 
 export interface Image {
   url: string;
-  width: number;
-  height: number;
-  altText: string;
+  alt: string;
 }
 
 export interface List<T> {
-  nodes: T[];
+  edges: T[];
 }
 
 export interface ProductPriceRange {
-  minVariantPrice: Money;
-  maxVariantPrice: Money;
+  start: { gross: Money };
 }
 
 export interface Product {
   id: string;
-  handle: string;
-  title: string;
+  slug: string;
+  name: string;
   description: string;
-  descriptionHtml: string;
-  productType: string;
-  featuredImage: Image | null;
-  images?: List<Image>;
-  variants: List<ProductVariant>;
-  priceRange: ProductPriceRange;
+  category: {
+    name: string;
+  };
+  thumbnail: Image | null;
+  media: Image[];
+  variants: ProductVariant[];
+  pricing: {
+    priceRange: ProductPriceRange;
+  };
 }
 
 export interface ProductVariant {
   id: string;
-  priceV2: Money;
-  title: string;
-  availableForSale: boolean;
+  pricing: {
+    price: {
+      gross: Money;
+    };
+  };
+  name: string;
+  quantityAvailable: number;
 }

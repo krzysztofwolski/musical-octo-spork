@@ -13,7 +13,8 @@ export function Header() {
     >
       <div class={`rainfall ${tw`w-full h-full absolute`}`} />
       <nav
-        class={tw`w-11/12 h-24 max-w-5xl mx-auto flex items-center justify-between relative`}
+        class={tw
+          `w-11/12 h-24 max-w-5xl mx-auto flex items-center justify-between relative`}
       >
         <a href="/">
           <img

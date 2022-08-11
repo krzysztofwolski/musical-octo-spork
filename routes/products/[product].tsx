@@ -7,43 +7,50 @@ import { Footer } from "@/components/Footer.tsx";
 import { HeadElement } from "@/components/HeadElement.tsx";
 import { Header } from "@/components/Header.tsx";
 import ProductDetails from "@/islands/ProductDetails.tsx";
-import { graphql } from "@/utils/shopify.ts";
+import { graphqlClient } from "@/utils/graphql.ts";
 import { Product } from "@/utils/types.ts";
 
 const q = `query ($product: String!) {
-  product(handle: $product) {
-    title
-    description
-    descriptionHtml
-    productType
-
-    variants(first: 10) {
-      nodes {
-        id
-        title
-        availableForSale
-        priceV2 {
-          amount
-          currencyCode
+  product(slug: $product, channel: "default-channel") {
+    id
+        name
+        slug
+        description
+        category{
+          name
         }
-      }
-    }
+        thumbnail{
+          url
+          alt
+        }
+        media{
+          alt
+          url
+        }
+        pricing{
+          priceRange{
+            start{
+              gross{
+                currency
+                amount
+              }
+            }
+          }
+        }
 
-    featuredImage {
-      url
-      width
-      height
-      altText
-    }
-
-    images(first: 10) {
-      nodes {
-        url
-        width
-        height
-        altText
-      }
-    }
+        variants{
+          id
+          name
+          quantityAvailable
+          pricing{
+            price{
+              gross{
+                currency
+                amount
+              }
+            }
+          }
+        }
   }
 }`;
 
@@ -53,7 +60,7 @@ interface Query {
 
 export const handler: Handlers<Query> = {
   async GET(_req, ctx) {
-    const data = await graphql<Query>(q, { product: ctx.params.product });
+    const data = await graphqlClient<Query>(q, { product: ctx.params.product });
     if (!data.product) {
       return new Response("Product not found", { status: 404 });
     }
@@ -72,18 +79,20 @@ export default function ProductPage(ctx: PageProps<Query>) {
     <>
       <HeadElement
         description={data.product.description}
-        image={data.product.featuredImage?.url}
-        title={data.product.title}
+        image={data.product.thumbnail?.url}
+        title={data.product.name}
         url={url}
       />
 
       <Header />
       <div
-        class={tw`w-11/12 mt-16 max-w-5xl mx-auto flex items-center justify-between relative`}
+        class={tw
+          `w-11/12 mt-16 max-w-5xl mx-auto flex items-center justify-between relative`}
       >
         <a
           href="/"
-          class={tw`flex items-center gap-2 text-gray-400 hover:text-gray-800 transition-colors duration-200`}
+          class={tw
+            `flex items-center gap-2 text-gray-400 hover:text-gray-800 transition-colors duration-200`}
         >
           <svg
             width="16"
